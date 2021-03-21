@@ -3,9 +3,10 @@ import ProductList from "../../components/productList/productList";
 
 class productListPage extends Component {
   render() {
+    var { history } = this.props;
     return (
       <div>
-        <ProductList />
+        <ProductList history={history} />
       </div>
     );
   }
