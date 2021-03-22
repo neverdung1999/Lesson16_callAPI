@@ -3,51 +3,23 @@ import ProductItem from "../productItem/productItem";
 import { connect } from "react-redux";
 import callApi from "../../utils/apiCaller";
 import { Link } from "react-router-dom";
+import * as Action from "../../redux/action/index";
 class productList extends Component {
   constructor(props) {
     super(props);
-    this.state = {
-      courses: [],
-    };
   }
 
   componentDidMount = () => {
-    callApi("GET", "course", null).then((response) => {
-      this.setState({
-        courses: response.data.courses,
-      });
-    });
+    this.props.fetchAllProducts();
   };
 
   onDeleteItem = (id) => {
-    var { courses } = this.state;
-    callApi("DELETE", `course/${id}`, null).then((response) => {
-      if (response.status === 200) {
-        var index = this.findIndex(courses, id);
-        // console.log(index);;
-        if (index !== -1) {
-          courses.splice(index, 1);
-          this.setState({
-            courses: courses,
-          });
-        }
-      }
-    });
+    this.props.deleteOneProducts(id);
   };
-
-  findIndex = (courses, id) => {
-    var results = -1;
-    courses.forEach((course, index) => {
-      if (course._id === id) {
-        results = index;
-      }
-    });
-    return results;
-  };;
 
   render() {
     // var products = [];
-    var { courses } = this.state;
+    var { courses } = this.props;
     return (
       <div className="container">
         <div className="row">
@@ -104,7 +76,18 @@ class productList extends Component {
 }
 
 const mapStateToProps = (state) => {
-  return { products: state.Products };
+  return { courses: state.Products };
 };
 
-export default connect(mapStateToProps, null)(productList);
+const mapDispatchToProps = (dispatch, props) => {
+  return {
+    fetchAllProducts: () => {
+      dispatch(Action.actFetchProductRequest());
+    },
+    deleteOneProducts: (id) => {
+      dispatch(Action.actDeleteProductRequest(id));
+    },
+  };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(productList);

@@ -2,7 +2,8 @@ import React, { Component } from "react";
 import callApi from "../../utils/apiCaller";
 import { Link } from "react-router-dom";
 import "./productAddAction.css";
-
+import { connect } from "react-redux";
+import * as action from "../../redux/action/index";
 class productAddAction extends Component {
   constructor(props) {
     super(props);
@@ -21,17 +22,21 @@ class productAddAction extends Component {
     var { match } = this.props;
     if (match) {
       var id = match.params.id;
-      callApi("GET", `course/${id}/edit`, null).then((response) => {
-        var data = response.data.courses;
-        this.setState({
-          id: data._id,
-          txtName: data.name,
-          txtDes: data.description,
-          txtVideo: data.videoId,
-          txtSlug: data.slug,
-          txtTitle: data.title,
-          chkbStatus: data.status,
-        });
+      this.props.onEditingProduct(id);
+    }
+  };
+
+  componentWillReceiveProps = (nextProps) => {
+    if (nextProps && nextProps.itemEditing) {
+      var { itemEditing } = nextProps;
+      this.setState({
+        id: itemEditing._id,
+        txtName: itemEditing.name,
+        txtDes: itemEditing.description,
+        txtVideo: itemEditing.videoId,
+        txtSlug: itemEditing.slug,
+        txtTitle: itemEditing.title,
+        chkbStatus: itemEditing.status,
       });
     }
   };
@@ -57,27 +62,23 @@ class productAddAction extends Component {
       txtTitle,
       chkbStatus,
     } = this.state;
+    var product = {
+      id: id,
+      name: txtName,
+      description: txtDes,
+      videoId: txtVideo,
+      slug: txtSlug,
+      title: txtTitle,
+      status: chkbStatus,
+    };
     if (id) {
       //update data
-      callApi("PUT", `course/${id}/update`, {
-        name: txtName,
-        description: txtDes,
-        videoId: txtVideo,
-        slug: txtSlug,
-        title: txtTitle,
-        status: chkbStatus,
-      }).then((res) => history.push("/products"));
+      this.props.onUpdateProduct(product);
     } else {
       // add data
-      callApi("POST", "course/store", {
-        name: txtName,
-        description: txtDes,
-        videoId: txtVideo,
-        slug: txtSlug,
-        title: txtTitle,
-        status: chkbStatus,
-      }).then((response) => history.push("/products")); // có thể sử dụng push(" truyền params ") hoặc goBack để quay lại trang trước đó
+      this.props.onAddProduct(product);
     }
+    history.goBack();
   };
 
   render() {
@@ -197,4 +198,24 @@ class productAddAction extends Component {
   }
 }
 
-export default productAddAction;
+const mapStateToProps = (state) => {
+  return {
+    itemEditing: state.ItemEditing,
+  };
+};
+
+const mapDispatchToProps = (dispatch, props) => {
+  return {
+    onAddProduct: (product) => {
+      dispatch(action.actAddProductRequest(product));
+    },
+    onEditingProduct: (id) => {
+      dispatch(action.actGetOneProduct(id));
+    },
+    onUpdateProduct: (product) => {
+      dispatch(action.actUpdateProductRequest(product));
+    },
+  };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(productAddAction);
